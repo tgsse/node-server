@@ -13,7 +13,7 @@ const products = [
     }
 ]
 
-function getAll(req, res, next) {
+function getAll(req, res, _) {
     res.json({products})
 }
 
