@@ -3,7 +3,7 @@ const express = require('express')
 const {
     applyMiddlewares,
     registerRoutes,
-} = require("./util/util")
+} = require("./util/middlewareUtil")
 
 const app = express()
 

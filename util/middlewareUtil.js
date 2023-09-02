@@ -6,7 +6,7 @@ const bodyParser = require("body-parser")
 
 const indexRouter = require("../routes")
 const productsRouter = require("../routes/api/productsRouter")
-const HttpError = require("../model/errors/HttpError")
+const HttpError = require("./errors/HttpError")
 const usersRouter = require("../routes/api/usersRouter")
 const {HttpStatus} = require("./constants")
 
