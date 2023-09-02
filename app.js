@@ -1,13 +1,13 @@
-const express = require('express');
+const express = require('express')
 
 const {
     applyMiddlewares,
     registerRoutes,
-} = require("./util/util");
+} = require("./util/util")
 
-const app = express();
+const app = express()
 
-applyMiddlewares(app);
+applyMiddlewares(app)
 registerRoutes(app)
 
-module.exports = app;
+module.exports = app
