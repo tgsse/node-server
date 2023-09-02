@@ -1,6 +1,7 @@
-const { v4: uuid } = require('uuid');
+const { v4: uuid } = require('uuid')
 
-const HttpError = require('../model/errors/HttpError');
+const HttpError = require('../model/errors/HttpError')
+const {HttpStatus} = require("../util/constants")
 
 const products = [
     {
@@ -16,7 +17,8 @@ function getAll(req, res, next) {
 }
 
 function getById(req, res, next) {
-    const product = products.find(p => p.id === req.params.id)
+    const id = req.params.id
+    const product = products.find(p => p.id === id)
     if (product) {
         res.json({product})
     } else {
@@ -24,11 +26,11 @@ function getById(req, res, next) {
     }
 }
 
-function addProduct(req, res, next) {
+function createProduct(req, res, next) {
     const { title, description, price } = req.body
     const existingProduct = products.find(p => p.title === title)
     if (existingProduct) {
-        return next(new HttpError(409, `Product already exists with id ${existingProduct.id}`))
+        return next(new HttpError(HttpStatus.Conflict, `Product already exists with id ${existingProduct.id}`))
     }
     const product = {
         id: uuid(),
@@ -38,11 +40,12 @@ function addProduct(req, res, next) {
     }
     products.push(product)
 
-    res.status(201).json({product})
+    res.status(HttpStatus.Created).json({product})
 }
 
 function editProduct(req, res, next) {
-    const { id, title, price, description } = req.body
+    const id = req.params.id
+    const { title, price, description } = req.body
     const existingProductIndex = products.findIndex(p => p.id === id)
     if (existingProductIndex === -1) {
         return next(HttpError.NotFound(`product with id ${id}`))
@@ -58,9 +61,22 @@ function editProduct(req, res, next) {
     res.json({product: updatedProduct})
 }
 
+function deleteProduct(req, res, next) {
+    const id = req.params.id
+    const productIndex = products.findIndex(p => p.id === id)
+    if (productIndex === -1) {
+        return next(HttpError.NotFound(`product with id ${id}`))
+    }
+
+    products.splice(productIndex, 1)
+
+    res.status(HttpStatus.NoContent).send()
+}
+
 module.exports = {
     getAll,
     getById,
-    addProduct,
+    createProduct,
     editProduct,
+    deleteProduct,
 }

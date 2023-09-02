@@ -1,16 +1,17 @@
 const express = require('express')
 
-const HttpError = require("../../model/errors/HttpError");
-const productsController = require("../../controller/productsController");
+const productsController = require("../../controller/productsController")
 
 const productsRouter = express.Router()
 
 productsRouter.get('/', productsController.getAll)
 
-productsRouter.get('/:productId', productsController.getById)
+productsRouter.get('/:id', productsController.getById)
 
-productsRouter.post('/', productsController.addProduct)
+productsRouter.post('/', productsController.createProduct)
 
-productsRouter.put('/', productsController.editProduct)
+productsRouter.patch('/:id', productsController.editProduct)
+
+productsRouter.delete('/:id', productsController.deleteProduct)
 
 module.exports = productsRouter
