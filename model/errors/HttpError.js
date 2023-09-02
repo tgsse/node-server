@@ -6,7 +6,7 @@ class HttpError extends Error {
         this.code = code
     }
 
-    static NotFound = (target) => new HttpError(HttpStatus.NotFound, `Could not find ${target}.`)
+    static notFound = (target) => new HttpError(HttpStatus.NotFound, `Could not find ${target}.`)
 }
 
 module.exports = HttpError

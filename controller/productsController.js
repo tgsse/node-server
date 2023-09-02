@@ -23,20 +23,22 @@ function getById(req, res, next) {
     if (product) {
         res.json({product})
     } else {
-        next(HttpError.NotFound('product'))
+        next(HttpError.notFound('product'))
     }
 }
 
 function createProduct(req, res, next) {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-        return next(new HttpError(HttpStatus.UnprocessableEntity, "Invalid data provided. Please check your inputs."))
+        next(new HttpError(HttpStatus.UnprocessableEntity, "Invalid data provided. Please check your inputs."))
+        return
     }
 
     const { title, description, price } = req.body
     const existingProduct = products.find(p => p.title === title)
     if (existingProduct) {
-        return next(new HttpError(HttpStatus.Conflict, `Product already exists with id ${existingProduct.id}`))
+        next(new HttpError(HttpStatus.Conflict, `Product already exists with id ${existingProduct.id}`))
+        return
     }
     const product = {
         id: uuid(),
@@ -52,14 +54,16 @@ function createProduct(req, res, next) {
 function editProduct(req, res, next) {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-        return next(new HttpError(HttpStatus.UnprocessableEntity, "Invalid data provided. Please check your inputs."))
+        next(new HttpError(HttpStatus.UnprocessableEntity, "Invalid data provided. Please check your inputs."))
+        return
     }
 
     const id = req.params.id
     const { title, price, description } = req.body
     const existingProductIndex = products.findIndex(p => p.id === id)
     if (existingProductIndex === -1) {
-        return next(HttpError.NotFound(`product with id ${id}`))
+        next(HttpError.notFound(`product with id ${id}`))
+        return
     }
     const existingProduct = products[existingProductIndex]
     const updatedProduct = {
@@ -76,7 +80,8 @@ function deleteProduct(req, res, next) {
     const id = req.params.id
     const productIndex = products.findIndex(p => p.id === id)
     if (productIndex === -1) {
-        return next(HttpError.NotFound(`product with id ${id}`))
+        next(HttpError.notFound(`product with id ${id}`))
+        return
     }
 
     products.splice(productIndex, 1)

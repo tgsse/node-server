@@ -31,16 +31,17 @@ function registerRoutes(app) {
 }
 
 function pageNotFoundHandler(req, res, next) {
-    next(HttpError.NotFound('page requested'))
+    next(HttpError.notFound('page requested'))
 }
 
 function endpointNotFoundHandler(req, res, next) {
-    next(HttpError.NotFound('specified endpoint'))
+    next(HttpError.notFound('specified endpoint'))
 }
 
 function errorHandler(error, req, res, next) {
     if (res.headerSent) {
-        return next(error)
+        next(error)
+        return
     }
 
     res

@@ -23,20 +23,22 @@ function getById(req, res, next) {
     if (user) {
         res.json({user})
     } else {
-        next(HttpError.NotFound('user'))
+        next(HttpError.notFound('user'))
     }
 }
 
 function createUser(req, res, next) {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-        return next(new HttpError(HttpStatus.UnprocessableEntity, "Invalid data provided. Please check your inputs."))
+        next(new HttpError(HttpStatus.UnprocessableEntity, "Invalid data provided. Please check your inputs."))
+        return
     }
 
     const { name, email, password } = req.body
     const existingUser = users.find(p => p.email === email)
     if (existingUser) {
-        return next(new HttpError(HttpStatus.Conflict, `User already exists with id ${existingUser.id}.`))
+        next(new HttpError(HttpStatus.Conflict, `User already exists with id ${existingUser.id}.`))
+        return
     }
     const user = {
         id: uuid(),
@@ -55,7 +57,8 @@ function editUser(req, res, next) {
     const { name, password } = req.body
     const existingUserIndex = users.findIndex(p => p.id === id)
     if (existingUserIndex === -1) {
-        return next(HttpError.NotFound(`user with id ${id}`))
+        next(HttpError.notFound(`user with id ${id}`))
+        return
     }
     const existingUser = users[existingUserIndex]
     const updatedUser = {
@@ -71,7 +74,8 @@ function deleteUser(req, res, next) {
     const id = req.params.id
     const userIndex = users.findIndex(p => p.id === id)
     if (userIndex === -1) {
-        return next(HttpError.NotFound(`user with id ${id}`))
+        next(HttpError.notFound(`user with id ${id}`))
+        return
     }
 
     users.splice(userIndex, 1)
