@@ -2,6 +2,7 @@ const { v4: uuid } = require('uuid')
 
 const HttpError = require('../model/errors/HttpError')
 const {HttpStatus} = require("../util/constants")
+const {validationResult} = require("express-validator");
 
 const products = [
     {
@@ -27,6 +28,11 @@ function getById(req, res, next) {
 }
 
 function createProduct(req, res, next) {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        return next(new HttpError(HttpStatus.UnprocessableEntity, "Invalid data provided. Please check your inputs."))
+    }
+
     const { title, description, price } = req.body
     const existingProduct = products.find(p => p.title === title)
     if (existingProduct) {
@@ -44,6 +50,11 @@ function createProduct(req, res, next) {
 }
 
 function editProduct(req, res, next) {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        return next(new HttpError(HttpStatus.UnprocessableEntity, "Invalid data provided. Please check your inputs."))
+    }
+
     const id = req.params.id
     const { title, price, description } = req.body
     const existingProductIndex = products.findIndex(p => p.id === id)

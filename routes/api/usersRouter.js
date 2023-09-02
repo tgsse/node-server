@@ -9,7 +9,14 @@ usersRouter.get('/', usersController.getAll)
 
 usersRouter.get('/:id', usersController.getById)
 
-usersRouter.post('/', usersController.createUser)
+usersRouter.post(
+    '/',
+    [
+        check(['name', 'email', 'password']).not().isEmpty(),
+        check('email').normalizeEmail().isEmail(),
+        check('password').isLength({min: 6}),
+    ],
+    usersController.createUser)
 
 usersRouter.patch('/:id', usersController.editUser)
 

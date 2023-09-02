@@ -1,6 +1,7 @@
 const { v4: uuid } = require('uuid')
 const HttpError = require('../model/errors/HttpError')
 const {HttpStatus} = require("../util/constants");
+const {validationResult} = require("express-validator");
 
 const users = [
     {
@@ -27,6 +28,11 @@ function getById(req, res, next) {
 }
 
 function createUser(req, res, next) {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        return next(new HttpError(HttpStatus.UnprocessableEntity, "Invalid data provided. Please check your inputs."))
+    }
+
     const { name, email, password } = req.body
     const existingUser = users.find(p => p.email === email)
     if (existingUser) {
