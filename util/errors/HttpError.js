@@ -7,6 +7,7 @@ class HttpError extends Error {
     }
 
     static notFound = (target) => new HttpError(HttpStatus.NotFound, `Could not find ${target}.`)
+    static serverError = () => new HttpError(HttpStatus.InternalServerError, `Something went wrong. Please try again.`)
 }
 
 module.exports = HttpError

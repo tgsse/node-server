@@ -5,24 +5,32 @@ const HttpError = require('../util/errors/HttpError')
 const {HttpStatus} = require("../util/constants")
 const Product = require('../models/product')
 
-const products = [
-    {
-        id: uuid(),
-        title: 'product 1 name',
-        description: 'the best product ever!',
-        price: 7.14,
+async function getAll(req, res, next) {
+    let products
+    try {
+        products = await Product.find()
+    } catch (e) {
+        console.error(e)
+        next(HttpError.serverError())
+        return
     }
-]
-
-function getAll(req, res, _) {
-    res.json({products})
+    res.json({products: products.map(p => p.toObject({getters: true})) })
 }
 
-function getById(req, res, next) {
+async function getById(req, res, next) {
     const id = req.params.id
-    const product = products.find(p => p.id === id)
+
+    let product
+    try {
+        product = await Product.findById(id)
+    } catch (e) {
+        console.error(e)
+        next(HttpError.serverError())
+        return
+    }
+
     if (product) {
-        res.json({product})
+        res.json({product: product.toObject({getters: true})})
     } else {
         next(HttpError.notFound('product'))
     }
@@ -36,11 +44,7 @@ async function createProduct(req, res, next) {
     }
 
     const {title, description, price} = req.body
-    // const existingProduct = products.find(p => p.title === title) TODO rewrite this to use db aswell
-    // if (existingProduct) {
-    //     next(new HttpError(HttpStatus.Conflict, `Product already exists with id ${existingProduct.id}`))
-    //     return
-    // }
+
     const product = new Product({
         title,
         description,
@@ -57,7 +61,7 @@ async function createProduct(req, res, next) {
     res.status(HttpStatus.Created).json({product})
 }
 
-function editProduct(req, res, next) {
+async function editProduct(req, res, next) {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
         next(new HttpError(HttpStatus.UnprocessableEntity, "Invalid data provided. Please check your inputs."))
@@ -65,32 +69,57 @@ function editProduct(req, res, next) {
     }
 
     const id = req.params.id
-    const { title, price, description } = req.body
-    const existingProductIndex = products.findIndex(p => p.id === id)
-    if (existingProductIndex === -1) {
-        next(HttpError.notFound(`product with id ${id}`))
+    const {title, price, description} = req.body
+
+    let product
+    try {
+        product = await Product.findById(id)
+    } catch (e) {
+        console.error(e)
+        next(HttpError.serverError())
         return
     }
-    const existingProduct = products[existingProductIndex]
-    const updatedProduct = {
-        id,
-        title: title || existingProduct.title,
-        description: description || existingProduct.description,
-        price: price || existingProduct.description,
+
+    if (title && title !== product.title) {
+        product.title = title
     }
-    products[existingProductIndex] = updatedProduct
-    res.json({product: updatedProduct})
+    if (price && price !== product.price) {
+        product.price = price
+    }
+    if (description && description !== product.description) {
+        product.description = description
+    }
+
+    try {
+        await product.save()
+    } catch (e) {
+        console.error(e)
+        next(HttpError.serverError())
+        return
+    }
+
+    res.json({product: product.toObject({getters: true})})
 }
 
-function deleteProduct(req, res, next) {
+async function deleteProduct(req, res, next) {
     const id = req.params.id
-    const productIndex = products.findIndex(p => p.id === id)
-    if (productIndex === -1) {
-        next(HttpError.notFound(`product with id ${id}`))
+
+    let product
+    try {
+        product = await Product.findById(id)
+    } catch (e) {
+        console.error(e)
+        next(HttpError.serverError())
         return
     }
 
-    products.splice(productIndex, 1)
+    try {
+        await product.deleteOne()
+    } catch (e) {
+        console.error(e)
+        next(HttpError.serverError())
+        return
+    }
 
     res.status(HttpStatus.NoContent).send()
 }
