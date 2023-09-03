@@ -1,4 +1,4 @@
-const {HttpStatus} = require("../constants")
+const {HttpStatus} = require("../enums")
 
 class HttpError extends Error {
     constructor(code, message) {

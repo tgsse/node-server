@@ -1,97 +1,173 @@
-const { v4: uuid } = require('uuid')
+const {v4: uuid} = require('uuid')
 const HttpError = require('../util/errors/HttpError')
-const {HttpStatus} = require("../util/constants");
+const {MIN_PASSWORD_LENGTH} = require("../util/constants");
+const {HttpStatus} = require("../util/enums")
 const {validationResult} = require("express-validator");
+const {User} = require("../models/user");
 
-const users = [
-    {
-        id: uuid(),
-        name: 'Johny Blaze',
-        email: 'ghostrider@hotmail.com',
-        password: 'Whip1',
-        isLoggedIn: false,
+async function getAll(req, res, next) {
+
+    let users
+    try {
+        users = await User.find({}, '-password')
+    } catch (e) {
+        next(HttpError.serverError())
+        return
     }
-]
-
-function getAll(req, res, _) {
-    res.json({users})
+    res.json({users: users.map(u => u.toObject())})
 }
 
-function getById(req, res, next) {
+async function getById(req, res, next) {
     const id = req.params.id
-    const user = users.find(u => u.id === id)
-    if (user) {
-        res.json({user})
-    } else {
-        next(HttpError.notFound('user'))
+
+    let user
+    try {
+        user = await User.findById(id, '-password')
+        if (!user) {
+            throw HttpError.notFound(`user with id ${id}`)
+        }
+    } catch (e) {
+        next(e)
+        return
     }
+
+    res.json({user: user.toObject()})
 }
 
-function createUser(req, res, next) {
+async function createUser(req, res, next) {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
         next(new HttpError(HttpStatus.UnprocessableEntity, "Invalid data provided. Please check your inputs."))
         return
     }
 
-    const { name, email, password } = req.body
-    const existingUser = users.find(p => p.email === email)
-    if (existingUser) {
-        next(new HttpError(HttpStatus.Conflict, `User already exists with id ${existingUser.id}.`))
+    const {name, email, password} = req.body
+    const user = new User({
+        name, email, password
+    })
+
+    try {
+        await user.save()
+    } catch (e) {
+        next(e)
         return
     }
-    const user = {
-        id: uuid(),
-        name,
-        email,
-        password,
-        isLoggedIn: false,
-    }
-    users.push(user)
 
-    res.status(HttpStatus.Created).json({user})
+    res.status(HttpStatus.Created).json({user: user.toObject()})
 }
 
-function editUser(req, res, next) {
-    const id = req.params.id
-    const { name, password } = req.body
-    const existingUserIndex = users.findIndex(p => p.id === id)
-    if (existingUserIndex === -1) {
-        next(HttpError.notFound(`user with id ${id}`))
+async function editUser(req, res, next) {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        next(new HttpError(HttpStatus.UnprocessableEntity, "Invalid data provided. Please check your inputs."))
         return
     }
-    const existingUser = users[existingUserIndex]
-    const updatedUser = {
-        ...existingUser,
-        name: name || existingUser.name,
-        password: password || existingUser.password,
+
+    const id = req.params.id
+    const {name, password} = req.body
+
+    let user
+    try {
+        user = await User.findById(id)
+        if (!user) {
+             throw HttpError.notFound(`user with id ${id}`)
+        }
+    } catch (e) {
+        next(e)
+        return
     }
-    users[existingUserIndex] = updatedUser
-    res.json({user: updatedUser})
+
+    if (name && name.length > 0) {
+        user.name = name
+    }
+    if (password && password.length > MIN_PASSWORD_LENGTH) {
+        user.password = password
+    }
+
+    try {
+        await user.save()
+    } catch (e) {
+        next(e)
+        return
+    }
+
+    res.json({user: user.toObject()})
 }
 
-function deleteUser(req, res, next) {
+async function deleteUser(req, res, next) {
     const id = req.params.id
-    const userIndex = users.findIndex(p => p.id === id)
-    if (userIndex === -1) {
-        next(HttpError.notFound(`user with id ${id}`))
+
+    let user
+    try {
+        user = await User.findById(id)
+        if (!user) {
+            throw HttpError.notFound(`user with id ${id}`)
+        }
+    } catch (e) {
+        next(e)
         return
     }
 
-    users.splice(userIndex, 1)
+    try {
+        await user.deleteOne()
+    } catch (e) {
+        next(e)
+        return
+    }
 
     res.status(HttpStatus.NoContent).send()
 }
 
-function login(req, res, next) {
+async function login(req, res, next) {
     const {email, password} = req.body
 
-    const identifiedUser = users.find(u => u.email === email)
-    if (!identifiedUser || identifiedUser.password !== password) {
-        return next(new HttpError(HttpStatus.Unauthorized, `Could not identify user. Credentials seem to be wrong`))
+    let user
+    try {
+        user = await User.findOne({email, password})
+        if (!user) {
+            throw new HttpError(HttpStatus.Unauthorized, `Could not identify user. Credentials seem to be wrong`)
+        }
+    } catch (e) {
+        next(e)
+        return
     }
 
-    return res.json({message: "Logged in successfully."})
+    user.isLoggedIn = true
+
+    try {
+        await user.save()
+    } catch (e) {
+        next(e)
+        return
+    }
+
+    res.json({user: user.toObject()})
+}
+
+async function logout(req, res, next) {
+    const {email} = req.body
+
+    let user
+    try {
+        user = await User.findOne({email})
+        if (!user) {
+            throw new HttpError(HttpStatus.Unauthorized, `Could not identify user. Credentials seem to be wrong`)
+        }
+    } catch (e) {
+        next(e)
+        return
+    }
+
+    user.isLoggedIn = false
+
+    try {
+        await user.save()
+    } catch (e) {
+        next(e)
+        return
+    }
+
+    res.status(HttpStatus.NoContent).send()
 }
 
 module.exports = {
@@ -101,4 +177,8 @@ module.exports = {
     editUser,
     deleteUser,
     login,
+    logout,
 }
+
+// TODO create brew endpoint and follow tutorial from here:
+//  https://www.udemy.com/course/react-nodejs-express-mongodb-the-mern-fullstack-guide/learn/lecture/16929130#overview

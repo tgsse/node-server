@@ -1,5 +1,5 @@
 const express = require('express')
-const {check} = require("express-validator");
+const {check, oneOf} = require("express-validator");
 
 const productsController = require("../../controller/productsController")
 
@@ -14,7 +14,14 @@ productsRouter.post(
     check(['title', 'description', 'price']).not().isEmpty(),
     productsController.createProduct)
 
-productsRouter.patch('/:id', productsController.editProduct)
+productsRouter.patch(
+    '/:id',
+    oneOf([
+        check('title').not().isEmpty(),
+        check('description').not().isEmpty(),
+        check('price').not().isEmpty(),
+    ]),
+    productsController.editProduct)
 
 productsRouter.delete('/:id', productsController.deleteProduct)
 

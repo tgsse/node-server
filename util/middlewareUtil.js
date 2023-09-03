@@ -8,7 +8,7 @@ const indexRouter = require("../routes")
 const productsRouter = require("../routes/api/productsRouter")
 const HttpError = require("./errors/HttpError")
 const usersRouter = require("../routes/api/usersRouter")
-const {HttpStatus} = require("./constants")
+const {HttpStatus} = require("../util/enums")
 
 function applyMiddlewares(app) {
     app.use(logger('dev'))
@@ -39,6 +39,7 @@ function endpointNotFoundHandler(req, res, next) {
 }
 
 function errorHandler(error, req, res, next) {
+    console.error(error)
     if (res.headerSent) {
         next(error)
         return

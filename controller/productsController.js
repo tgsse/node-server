@@ -2,8 +2,8 @@ const { v4: uuid } = require('uuid')
 const {validationResult} = require("express-validator");
 
 const HttpError = require('../util/errors/HttpError')
-const {HttpStatus} = require("../util/constants")
-const Product = require('../models/product')
+const {HttpStatus} = require("../util/enums")
+const {Product} = require("../models/product");
 
 async function getAll(req, res, next) {
     let products
@@ -14,7 +14,7 @@ async function getAll(req, res, next) {
         next(HttpError.serverError())
         return
     }
-    res.json({products: products.map(p => p.toObject({getters: true})) })
+    res.json({products: products.map(p => p.toObject()) })
 }
 
 async function getById(req, res, next) {
@@ -30,7 +30,7 @@ async function getById(req, res, next) {
     }
 
     if (product) {
-        res.json({product: product.toObject({getters: true})})
+        res.json({product: product.toObject()})
     } else {
         next(HttpError.notFound('product'))
     }
@@ -98,7 +98,7 @@ async function editProduct(req, res, next) {
         return
     }
 
-    res.json({product: product.toObject({getters: true})})
+    res.json({product: product.toObject()})
 }
 
 async function deleteProduct(req, res, next) {
