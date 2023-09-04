@@ -14,7 +14,12 @@ const productSchema = new mongoose.Schema({
     price: {
         type: Number,
         required: true,
-    }
+    },
+    createdBy: {
+        type: mongoose.default.Types.ObjectId,
+        required: true,
+        ref: 'User',
+    },
 })
 
 exports.Product = mongoose.model('Product', productSchema)

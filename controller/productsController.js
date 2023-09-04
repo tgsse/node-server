@@ -1,9 +1,11 @@
-const { v4: uuid } = require('uuid')
+const {v4: uuid} = require('uuid')
 const {validationResult} = require("express-validator");
 
 const HttpError = require('../util/errors/HttpError')
 const {HttpStatus} = require("../util/enums")
 const {Product} = require("../models/product");
+const {User} = require("../models/user");
+const {startSession} = require("mongoose");
 
 async function getAll(req, res, next) {
     let products
@@ -14,7 +16,7 @@ async function getAll(req, res, next) {
         next(HttpError.serverError())
         return
     }
-    res.json({products: products.map(p => p.toObject()) })
+    res.json({products: products.map(p => p.toObject())})
 }
 
 async function getById(req, res, next) {
@@ -36,6 +38,23 @@ async function getById(req, res, next) {
     }
 }
 
+async function getProductsByUserId(req, res, next) {
+    const id = req.params.id
+
+    let userWithProducts
+    try {
+        userWithProducts = await User.findById(id).populate('createdProducts')
+        if (!userWithProducts) {
+            throw HttpError.notFound(`user with id ${id}`)
+        }
+    } catch (e) {
+        next(e)
+        return
+    }
+
+    res.json({products: userWithProducts.createdProducts.map(p => p.toObject())})
+}
+
 async function createProduct(req, res, next) {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
@@ -43,16 +62,33 @@ async function createProduct(req, res, next) {
         return
     }
 
-    const {title, description, price} = req.body
+    const {title, description, price, userId} = req.body
+
+    let user
+    try {
+        user = await User.findById(userId)
+        if (!user) {
+            throw HttpError.notFound(`user with id ${userId}`)
+        }
+    } catch (e) {
+        next(e)
+        return
+    }
 
     const product = new Product({
         title,
         description,
         price,
+        createdBy: userId,
     })
 
     try {
-        await product.save()
+        const session = await startSession()
+        session.startTransaction()
+        await product.save({session})
+        user.createdProducts.push(product)
+        await user.save({session})
+        await session.commitTransaction()
     } catch (e) {
         next(e)
         return
@@ -106,18 +142,26 @@ async function deleteProduct(req, res, next) {
 
     let product
     try {
-        product = await Product.findById(id)
+        product = await Product.findById(id).populate('createdBy')
+        if (!product) {
+            throw new HttpError(HttpStatus.UnprocessableEntity, `Invalid data provided. Product does not exist with id ${id}.`)
+        }
     } catch (e) {
-        console.error(e)
         next(HttpError.serverError())
         return
     }
 
     try {
-        await product.deleteOne()
+        const session = await startSession()
+        session.startTransaction()
+
+        await product.deleteOne({session})
+        product.createdBy.createdProducts.pull(product)
+        await product.createdBy.save({session})
+
+        await session.commitTransaction()
     } catch (e) {
-        console.error(e)
-        next(HttpError.serverError())
+        next(e)
         return
     }
 
@@ -127,6 +171,7 @@ async function deleteProduct(req, res, next) {
 module.exports = {
     getAll,
     getById,
+    getProductsByUserId,
     createProduct,
     editProduct,
     deleteProduct,

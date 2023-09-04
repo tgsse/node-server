@@ -9,6 +9,8 @@ productsRouter.get('/', productsController.getAll)
 
 productsRouter.get('/:id', productsController.getById)
 
+productsRouter.get('/user/:id', productsController.getProductsByUserId)
+
 productsRouter.post(
     '/',
     check(['title', 'description', 'price']).not().isEmpty(),

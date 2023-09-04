@@ -43,7 +43,10 @@ async function createUser(req, res, next) {
 
     const {name, email, password} = req.body
     const user = new User({
-        name, email, password
+        name,
+        email,
+        password,
+        createdProducts: [],
     })
 
     try {
@@ -70,7 +73,7 @@ async function editUser(req, res, next) {
     try {
         user = await User.findById(id)
         if (!user) {
-             throw HttpError.notFound(`user with id ${id}`)
+            throw HttpError.notFound(`user with id ${id}`)
         }
     } catch (e) {
         next(e)
@@ -179,6 +182,3 @@ module.exports = {
     login,
     logout,
 }
-
-// TODO create brew endpoint and follow tutorial from here:
-//  https://www.udemy.com/course/react-nodejs-express-mongodb-the-mern-fullstack-guide/learn/lecture/16929130#overview
