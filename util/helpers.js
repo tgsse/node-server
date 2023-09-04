@@ -1,4 +1,4 @@
-require('dotenv').config()
+require('dotenv').config({ path: './secrets/.env'})
 
 function getMongoConnectionUri() {
     const mongoUsername = encodeURIComponent(process.env.MONGO_USER)

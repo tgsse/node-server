@@ -3,12 +3,15 @@ const { check, oneOf } = require('express-validator')
 
 const productsController = require('../../controller/productsController')
 const fileUpload = require('../../middlewares/fileUpload')
+const requireAuth = require('../../middlewares/requireAuth')
 
 const productsRouter = express.Router()
 
 productsRouter.get('/', productsController.getAll)
 
 productsRouter.get('/:id', productsController.getById)
+
+productsRouter.use(requireAuth)
 
 productsRouter.get('/user/:id', productsController.getProductsByUserId)
 
