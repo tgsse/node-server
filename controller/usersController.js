@@ -1,12 +1,10 @@
-const {v4: uuid} = require('uuid')
 const HttpError = require('../util/errors/HttpError')
-const {MIN_PASSWORD_LENGTH} = require("../util/constants");
-const {HttpStatus} = require("../util/enums")
-const {validationResult} = require("express-validator");
-const {User} = require("../models/user");
+const { MIN_PASSWORD_LENGTH } = require('../util/constants')
+const { HttpStatus } = require('../util/enums')
+const { validationResult } = require('express-validator')
+const { User } = require('../models/user')
 
 async function getAll(req, res, next) {
-
     let users
     try {
         users = await User.find({}, '-password')
@@ -14,7 +12,7 @@ async function getAll(req, res, next) {
         next(HttpError.serverError())
         return
     }
-    res.json({users: users.map(u => u.toObject())})
+    res.json({ users: users.map(u => u.toObject()) })
 }
 
 async function getById(req, res, next) {
@@ -31,17 +29,22 @@ async function getById(req, res, next) {
         return
     }
 
-    res.json({user: user.toObject()})
+    res.json({ user: user.toObject() })
 }
 
 async function createUser(req, res, next) {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-        next(new HttpError(HttpStatus.UnprocessableEntity, "Invalid data provided. Please check your inputs."))
+        next(
+            new HttpError(
+                HttpStatus.UnprocessableEntity,
+                'Invalid data provided. Please check your inputs.'
+            )
+        )
         return
     }
 
-    const {name, email, password} = req.body
+    const { name, email, password } = req.body
     const user = new User({
         name,
         email,
@@ -56,18 +59,23 @@ async function createUser(req, res, next) {
         return
     }
 
-    res.status(HttpStatus.Created).json({user: user.toObject()})
+    res.status(HttpStatus.Created).json({ user: user.toObject() })
 }
 
 async function editUser(req, res, next) {
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-        next(new HttpError(HttpStatus.UnprocessableEntity, "Invalid data provided. Please check your inputs."))
+        next(
+            new HttpError(
+                HttpStatus.UnprocessableEntity,
+                'Invalid data provided. Please check your inputs.'
+            )
+        )
         return
     }
 
     const id = req.params.id
-    const {name, password} = req.body
+    const { name, password } = req.body
 
     let user
     try {
@@ -94,7 +102,7 @@ async function editUser(req, res, next) {
         return
     }
 
-    res.json({user: user.toObject()})
+    res.json({ user: user.toObject() })
 }
 
 async function deleteUser(req, res, next) {
@@ -122,13 +130,16 @@ async function deleteUser(req, res, next) {
 }
 
 async function login(req, res, next) {
-    const {email, password} = req.body
+    const { email, password } = req.body
 
     let user
     try {
-        user = await User.findOne({email, password})
+        user = await User.findOne({ email, password })
         if (!user) {
-            throw new HttpError(HttpStatus.Unauthorized, `Could not identify user. Credentials seem to be wrong`)
+            throw new HttpError(
+                HttpStatus.Unauthorized,
+                `Could not identify user. Credentials seem to be wrong`
+            )
         }
     } catch (e) {
         next(e)
@@ -144,17 +155,20 @@ async function login(req, res, next) {
         return
     }
 
-    res.json({user: user.toObject()})
+    res.json({ user: user.toObject() })
 }
 
 async function logout(req, res, next) {
-    const {email} = req.body
+    const { email } = req.body
 
     let user
     try {
-        user = await User.findOne({email})
+        user = await User.findOne({ email })
         if (!user) {
-            throw new HttpError(HttpStatus.Unauthorized, `Could not identify user. Credentials seem to be wrong`)
+            throw new HttpError(
+                HttpStatus.Unauthorized,
+                `Could not identify user. Credentials seem to be wrong`
+            )
         }
     } catch (e) {
         next(e)

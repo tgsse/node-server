@@ -23,11 +23,13 @@ const userSchema = new mongoose.Schema({
         required: false,
         default: false,
     },
-    createdProducts: [{
-        type: mongoose.default.Types.ObjectId,
-        required: true,
-        ref: 'Product',
-    }],
+    createdProducts: [
+        {
+            type: mongoose.default.Types.ObjectId,
+            required: true,
+            ref: 'Product',
+        },
+    ],
 })
 
 userSchema.plugin(uniqueValidator)

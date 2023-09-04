@@ -1,4 +1,4 @@
-const {HttpStatus} = require("../enums")
+const { HttpStatus } = require('../enums')
 
 class HttpError extends Error {
     constructor(code, message) {
@@ -6,8 +6,14 @@ class HttpError extends Error {
         this.code = code
     }
 
-    static notFound = (target) => new HttpError(HttpStatus.NotFound, `Could not find ${target}.`)
-    static serverError = () => new HttpError(HttpStatus.InternalServerError, `Something went wrong. Please try again.`)
+    static notFound = target =>
+        new HttpError(HttpStatus.NotFound, `Could not find ${target}.`)
+
+    static serverError = () =>
+        new HttpError(
+            HttpStatus.InternalServerError,
+            `Something went wrong. Please try again.`
+        )
 }
 
 module.exports = HttpError

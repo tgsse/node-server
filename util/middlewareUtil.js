@@ -1,14 +1,14 @@
-const logger = require("morgan")
-const express = require("express")
-const cookieParser = require("cookie-parser")
-const path = require("path")
-const bodyParser = require("body-parser")
+const logger = require('morgan')
+const express = require('express')
+const cookieParser = require('cookie-parser')
+const path = require('path')
+const bodyParser = require('body-parser')
 
-const indexRouter = require("../routes")
-const productsRouter = require("../routes/api/productsRouter")
-const HttpError = require("./errors/HttpError")
-const usersRouter = require("../routes/api/usersRouter")
-const {HttpStatus} = require("../util/enums")
+const indexRouter = require('../routes')
+const productsRouter = require('../routes/api/productsRouter')
+const HttpError = require('./errors/HttpError')
+const usersRouter = require('../routes/api/usersRouter')
+const { HttpStatus } = require('../util/enums')
 
 function applyMiddlewares(app) {
     app.use(logger('dev'))
@@ -45,9 +45,9 @@ function errorHandler(error, req, res, next) {
         return
     }
 
-    res
-        .status(error.code || HttpStatus.InternalServerError)
-        .json({message: error.message || 'An unknown error occurred.'})
+    res.status(error.code || HttpStatus.InternalServerError).json({
+        message: error.message || 'An unknown error occurred.',
+    })
 }
 
 module.exports = {
