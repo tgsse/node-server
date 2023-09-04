@@ -20,6 +20,10 @@ const productSchema = new mongoose.Schema({
         required: true,
         ref: 'User',
     },
+    image: {
+        type: String,
+        required: false,
+    },
 })
 
 exports.Product = mongoose.model('Product', productSchema)

@@ -1,25 +1,15 @@
-const logger = require('morgan')
-const express = require('express')
-const cookieParser = require('cookie-parser')
-const path = require('path')
-const bodyParser = require('body-parser')
-
-const indexRouter = require('../routes')
-const productsRouter = require('../routes/api/productsRouter')
-const HttpError = require('./errors/HttpError')
-const usersRouter = require('../routes/api/usersRouter')
+const indexRouter = require('./index')
+const productsRouter = require('./api/productsRouter')
+const usersRouter = require('./api/usersRouter')
+const HttpError = require('../util/errors/HttpError')
 const { HttpStatus } = require('../util/enums')
-
-function applyMiddlewares(app) {
-    app.use(logger('dev'))
-    app.use(express.json())
-    app.use(express.urlencoded({ extended: false }))
-    app.use(cookieParser())
-    app.use(express.static(path.join(__dirname, 'public')))
-    app.use(bodyParser.json())
-}
+const fs = require('fs')
+const express = require('express')
+const path = require('path')
 
 function registerRoutes(app) {
+    app.use('/images', express.static(path.join('uploads', 'images')))
+
     app.use('/', indexRouter)
     app.use('/api/products', productsRouter)
     app.use('/api/users', usersRouter)
@@ -40,6 +30,10 @@ function endpointNotFoundHandler(req, res, next) {
 
 function errorHandler(error, req, res, next) {
     console.error(error)
+    if (req.file) {
+        // rollback file save if an error occurred after a file has been added
+        fs.unlink(req.file.path, console.error)
+    }
     if (res.headerSent) {
         next(error)
         return
@@ -50,7 +44,4 @@ function errorHandler(error, req, res, next) {
     })
 }
 
-module.exports = {
-    applyMiddlewares,
-    registerRoutes,
-}
+module.exports = registerRoutes

@@ -1,9 +1,7 @@
 const express = require('express')
 
-const {
-    applyMiddlewares,
-    registerRoutes,
-} = require("./util/middlewareUtil")
+const applyMiddlewares = require('./middlewares/setup')
+const registerRoutes = require('./routes/setup')
 
 const app = express()
 

@@ -5,6 +5,7 @@ const { HttpStatus } = require('../util/enums')
 const { Product } = require('../models/product')
 const { User } = require('../models/user')
 const { startSession } = require('mongoose')
+const fs = require('fs')
 
 async function getAll(req, res, next) {
     let products
@@ -86,6 +87,7 @@ async function createProduct(req, res, next) {
         description,
         price,
         createdBy: userId,
+        image: req.file.path,
     })
 
     try {
@@ -178,6 +180,8 @@ async function deleteProduct(req, res, next) {
         next(e)
         return
     }
+
+    fs.unlink(product.image, console.error)
 
     res.status(HttpStatus.NoContent).send()
 }
