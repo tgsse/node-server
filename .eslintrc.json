@@ -1,6 +1,7 @@
 {
   "extends": [
-    "eslint:recommended"
+    "eslint:recommended",
+    "prettier"
   ],
   "plugins": [],
   "parserOptions": {
@@ -16,7 +17,8 @@
   },
   "rules": {
     "quotes": 0,
-    "indent": 0,
+    "indent": "off",
+    "comma-dangle": "off",
     "no-console": 0,
     "no-debugger": 1,
     "no-var": 1,

@@ -10,6 +10,7 @@ const mimeTypeMap = {
     'image/jpg': 'jpg',
 }
 
+// noinspection JSUnusedGlobalSymbols
 const fileUpload = multer({
     limits: MAX_UPLOAD_FILE_SIZE,
     storage: multer.diskStorage({

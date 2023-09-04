@@ -124,7 +124,6 @@ async function editProduct(req, res, next) {
     try {
         product = await Product.findById(id)
     } catch (e) {
-        console.error(e)
         next(HttpError.serverError())
         return
     }
@@ -142,7 +141,6 @@ async function editProduct(req, res, next) {
     try {
         await product.save()
     } catch (e) {
-        console.error(e)
         next(HttpError.serverError())
         return
     }

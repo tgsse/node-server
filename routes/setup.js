@@ -34,6 +34,8 @@ function errorHandler(error, req, res, next) {
         // rollback file save if an error occurred after a file has been added
         fs.unlink(req.file.path, console.error)
     }
+
+    // noinspection JSUnresolvedReference
     if (res.headerSent) {
         next(error)
         return

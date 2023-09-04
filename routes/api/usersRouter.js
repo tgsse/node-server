@@ -3,12 +3,9 @@ const { check, oneOf } = require('express-validator')
 
 const usersController = require('../../controller/usersController')
 const { MIN_PASSWORD_LENGTH } = require('../../util/constants')
+const requireAuth = require('../../middlewares/requireAuth')
 
 const usersRouter = Router()
-
-usersRouter.get('/', usersController.getAll)
-
-usersRouter.get('/:id', usersController.getById)
 
 usersRouter.post(
     '/',
@@ -21,14 +18,6 @@ usersRouter.post(
     check('password').isLength({ min: MIN_PASSWORD_LENGTH }),
     usersController.createUser
 )
-
-usersRouter.patch(
-    '/:id',
-    oneOf([check('name').not().isEmpty(), check('password').not().isEmpty()]),
-    usersController.editUser
-)
-
-usersRouter.delete('/:id', usersController.deleteUser)
 
 usersRouter.post(
     '/login',
@@ -49,5 +38,19 @@ usersRouter.post(
         .isEmail(),
     usersController.logout
 )
+
+usersRouter.use(requireAuth)
+
+usersRouter.get('/', usersController.getAll)
+
+usersRouter.get('/:id', usersController.getById)
+
+usersRouter.patch(
+    '/:id',
+    oneOf([check('name').not().isEmpty(), check('password').not().isEmpty()]),
+    usersController.editUser
+)
+
+usersRouter.delete('/:id', usersController.deleteUser)
 
 module.exports = usersRouter

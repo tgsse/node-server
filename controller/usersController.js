@@ -1,8 +1,11 @@
 const HttpError = require('../util/errors/HttpError')
-const { MIN_PASSWORD_LENGTH } = require('../util/constants')
+const { MIN_PASSWORD_LENGTH, SALT } = require('../util/constants')
 const { HttpStatus } = require('../util/enums')
 const { validationResult } = require('express-validator')
 const { User } = require('../models/user')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+require('dotenv').config({ path: './secrets/.env' })
 
 async function getAll(req, res, next) {
     let users
@@ -38,17 +41,25 @@ async function createUser(req, res, next) {
         next(
             new HttpError(
                 HttpStatus.UnprocessableEntity,
-                'Invalid data provided. Please check your inputs.'
-            )
+                'Invalid data provided. Please check your inputs.',
+            ),
         )
         return
     }
 
     const { name, email, password } = req.body
+    let hashedPassword
+    try {
+        hashedPassword = await bcrypt.hash(password, SALT)
+    } catch (e) {
+        next(e)
+        return
+    }
+
     const user = new User({
         name,
         email,
-        password,
+        password: hashedPassword,
         createdProducts: [],
     })
 
@@ -59,7 +70,7 @@ async function createUser(req, res, next) {
         return
     }
 
-    res.status(HttpStatus.Created).json({ user: user.toObject() })
+    res.status(HttpStatus.Created).json({ name, email })
 }
 
 async function editUser(req, res, next) {
@@ -68,8 +79,8 @@ async function editUser(req, res, next) {
         next(
             new HttpError(
                 HttpStatus.UnprocessableEntity,
-                'Invalid data provided. Please check your inputs.'
-            )
+                'Invalid data provided. Please check your inputs.',
+            ),
         )
         return
     }
@@ -102,7 +113,7 @@ async function editUser(req, res, next) {
         return
     }
 
-    res.json({ user: user.toObject() })
+    res.json({ message: "Changes have been applied successfully." })
 }
 
 async function deleteUser(req, res, next) {
@@ -130,23 +141,37 @@ async function deleteUser(req, res, next) {
 }
 
 async function login(req, res, next) {
+    // NOTE: jwt tokens cannot be invalidated
     const { email, password } = req.body
 
     let user
+    let token
     try {
-        user = await User.findOne({ email, password })
+        user = await User.findOne({ email })
         if (!user) {
             throw new HttpError(
                 HttpStatus.Unauthorized,
-                `Could not identify user. Credentials seem to be wrong`
+                `Could not identify user. Credentials seem to be wrong`,
             )
         }
+
+        let isValidPassword = await bcrypt.compare(password, user.password)
+        if (!isValidPassword) {
+            throw new HttpError(
+                HttpStatus.Unauthorized,
+                `Could not identify user. Credentials seem to be wrong`,
+            )
+        }
+
+        token = await jwt.sign(
+            { userId: user.id, email: user.email },
+            process.env.AUTH_TOKEN_PRIVATE_KEY,
+            { expiresIn: '2h' },
+        )
     } catch (e) {
         next(e)
         return
     }
-
-    user.isLoggedIn = true
 
     try {
         await user.save()
@@ -155,7 +180,7 @@ async function login(req, res, next) {
         return
     }
 
-    res.json({ user: user.toObject() })
+    res.json({ token })
 }
 
 async function logout(req, res, next) {
@@ -167,13 +192,20 @@ async function logout(req, res, next) {
         if (!user) {
             throw new HttpError(
                 HttpStatus.Unauthorized,
-                `Could not identify user. Credentials seem to be wrong`
+                `Could not identify user. Credentials seem to be wrong`,
             )
         }
     } catch (e) {
         next(e)
         return
     }
+
+    // try {
+    //
+    // } catch (e) {
+    //     next(e)
+    //     return
+    // }
 
     user.isLoggedIn = false
 
