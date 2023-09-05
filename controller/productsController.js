@@ -69,7 +69,8 @@ async function createProduct(req, res, next) {
         return
     }
 
-    const { title, description, price, userId } = req.body
+    const userId = req.userData.userId
+    const { title, description, price } = req.body
 
     let user
     try {
@@ -128,6 +129,9 @@ async function editProduct(req, res, next) {
         return
     }
 
+    if (product.createdBy.toString() !== req.userData.userId) {
+        throw new HttpError(HttpStatus.Forbidden, "You do not have the necessary permissions to edit this product.")
+    }
     if (title && title !== product.title) {
         product.title = title
     }
@@ -163,6 +167,10 @@ async function deleteProduct(req, res, next) {
     } catch (e) {
         next(HttpError.serverError())
         return
+    }
+
+    if (product.createdBy.toString() !== req.userData.userId) {
+        throw new HttpError(HttpStatus.Forbidden, "You do not have the necessary permissions to delete this product.")
     }
 
     try {

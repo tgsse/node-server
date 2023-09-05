@@ -5,6 +5,10 @@ const { HttpStatus } = require('../util/enums')
 
 function requireAuth(req, res, next) {
     try {
+        if (req.method === 'OPTIONS') {
+            next()
+            return
+        }
         if (!req.headers.authorization) {
             throw new HttpError(HttpStatus.Unauthorized, 'Authentication failed.')
         }

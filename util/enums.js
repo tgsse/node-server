@@ -3,6 +3,7 @@ const HttpStatus = {
     Created: 201,
     NoContent: 204,
     Unauthorized: 401,
+    Forbidden: 403,
     NotFound: 404,
     Conflict: 409,
     UnprocessableEntity: 422,

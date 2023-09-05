@@ -18,11 +18,6 @@ const userSchema = new mongoose.Schema({
         required: true,
         minLength: 6,
     },
-    isLoggedIn: {
-        type: Boolean,
-        required: false,
-        default: false,
-    },
     createdProducts: [
         {
             type: mongoose.default.Types.ObjectId,

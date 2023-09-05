@@ -117,7 +117,7 @@ async function editUser(req, res, next) {
 }
 
 async function deleteUser(req, res, next) {
-    const id = req.params.id
+    const id = req.userData.userId
 
     let user
     try {
@@ -199,15 +199,6 @@ async function logout(req, res, next) {
         next(e)
         return
     }
-
-    // try {
-    //
-    // } catch (e) {
-    //     next(e)
-    //     return
-    // }
-
-    user.isLoggedIn = false
 
     try {
         await user.save()
